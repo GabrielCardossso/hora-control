@@ -38,12 +38,20 @@ O `.env.properties` é ignorado pelo Git. Em hospedagem, configure `DB_URL`, `DB
 
 Somente o administrador cria e gerencia contas. Não existe cadastro público.
 
+O total de horas exibido no painel inicial é sempre calculado somente com os
+registros do próprio usuário, inclusive quando ele também possui um perfil de
+coordenação. O coordenador consulta os registros de outras pessoas na tela de
+histórico, dentro da abrangência permitida pelo seu perfil.
+
 ## Regras principais
 
 - Cada professor pode possuir somente um ponto aberto.
 - A entrada e a saída usam o horário do servidor.
 - Aula normal exige uma turma ativa.
 - Professor só registra aula nas turmas vinculadas ao seu cadastro; sem vínculo, nenhuma turma é liberada.
+- Coordenadores que também ministram aulas registram o próprio ponto somente nas turmas vinculadas ao cadastro.
+- O curso sob responsabilidade define a abrangência de consulta do coordenador de curso; não define as turmas em que ele ministra aulas.
+- Atividades extras próprias permanecem visíveis para o coordenador de curso mesmo sem turma vinculada.
 - Fechamento altera o registro para `FECHADO`.
 - Código de turma, e-mail, matrícula e CPF possuem regras de unicidade quando informados.
 - Exclusão de usuário ou turma é lógica: o cadastro é inativado para preservar histórico.

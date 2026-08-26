@@ -6,6 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let usuarios = [];
   let cursos = [];
   let turmas = [];
+  const perfil = document.getElementById("perfil");
+  const cursoResponsavel = document.getElementById("cursoResponsavelId");
+  const campoCursoResponsavel = document.getElementById("campoCursoResponsavel");
+  const perfilAjuda = document.getElementById("perfilAjuda");
+  const descricoesPerfil = {
+    PROFESSOR: "Visualiza somente os próprios pontos e as turmas vinculadas.",
+    COORDENADOR_CURSO:
+      "Visualiza os próprios pontos e os registros das turmas do curso selecionado.",
+    COORDENADOR_NUCLEO: "Visualiza os registros de todos os cursos.",
+    COORDENADOR_EIXO: "Visualiza os registros de todos os cursos.",
+    ADMIN: "Possui acesso geral aos registros e aos cadastros do sistema.",
+  };
   const esc = (v) => {
     const d = document.createElement("div");
     d.textContent = v ?? "";
@@ -65,15 +77,24 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = lista
       .map(
         (u) =>
-          `<tr><td data-label="Nome"><strong>${esc(u.nome)}</strong></td><td data-label="Matrícula">${esc(u.matricula || "—")}</td><td data-label="E-mail">${esc(u.email)}</td><td data-label="Perfil">${esc((u.perfil || "").replaceAll("_", " "))}</td><td data-label="Curso/escopo">${esc(u.cursoResponsavel?.nome || (["ADMIN", "COORDENADOR_EIXO", "COORDENADOR_NUCLEO"].includes(u.perfil) ? "Geral" : "Próprio"))}</td><td data-label="Status"><span class="hc-status ${u.ativo ? "closed" : "open"}">${u.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><button class="hc-btn secondary" data-editar="${u.id}"><i class="fi fi-rr-edit" aria-hidden="true"></i>Editar</button></td></tr>`,
+          `<tr><td data-label="Nome"><strong>${esc(u.nome)}</strong></td><td data-label="Matrícula">${esc(u.matricula || "—")}</td><td data-label="E-mail">${esc(u.email)}</td><td data-label="Perfil">${esc((u.perfil || "").replaceAll("_", " "))}</td><td data-label="Abrangência de acesso">${esc(descreverAbrangencia(u))}</td><td data-label="Status"><span class="hc-status ${u.ativo ? "closed" : "open"}">${u.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><button class="hc-btn secondary" data-editar="${u.id}"><i class="fi fi-rr-edit" aria-hidden="true"></i>Editar</button></td></tr>`,
       )
       .join("");
+  }
+  function descreverAbrangencia(usuario) {
+    if (usuario.perfil === "PROFESSOR") return "Somente o próprio ponto";
+    if (usuario.perfil === "COORDENADOR_CURSO")
+      return usuario.cursoResponsavel
+        ? `Curso: ${usuario.cursoResponsavel.nome}`
+        : "Curso não definido";
+    if (usuario.perfil === "ADMIN") return "Acesso geral e administrativo";
+    return "Todos os cursos";
   }
   function popularOpcoes() {
     const filtroCursoAtual = document.getElementById("filtroUsuarioCurso").value;
     const filtroTurmaAtual = document.getElementById("filtroUsuarioTurma").value;
     document.getElementById("cursoResponsavelId").innerHTML =
-      '<option value="">Nenhum/escopo geral</option>' +
+      '<option value="">Selecione o curso</option>' +
       cursos
         .map(
           (c) =>
@@ -94,6 +115,13 @@ document.addEventListener("DOMContentLoaded", () => {
       turmas.map((t) => `<option value="${t.id}">${esc(t.codigo)} - ${esc(t.nome)}</option>`).join("");
     document.getElementById("filtroUsuarioCurso").value = filtroCursoAtual;
     document.getElementById("filtroUsuarioTurma").value = filtroTurmaAtual;
+  }
+  function atualizarAbrangencia() {
+    const coordenadorCurso = perfil.value === "COORDENADOR_CURSO";
+    campoCursoResponsavel.hidden = !coordenadorCurso;
+    cursoResponsavel.required = coordenadorCurso;
+    if (!coordenadorCurso) cursoResponsavel.value = "";
+    perfilAjuda.textContent = descricoesPerfil[perfil.value] || "";
   }
   function abrir(u = null) {
     form.reset();
@@ -117,12 +145,14 @@ document.addEventListener("DOMContentLoaded", () => {
         (o) => (o.selected = ids.has(Number(o.value))),
       );
     }
+    atualizarAbrangencia();
     modal.classList.add("open");
     document.getElementById("nome").focus();
   }
   document
     .getElementById("novoUsuario")
     .addEventListener("click", () => abrir());
+  perfil.addEventListener("change", atualizarAbrangencia);
   document.addEventListener("click", (e) => {
     if (e.target.matches("[data-fechar]")) modal.classList.remove("open");
     const id = e.target.closest("[data-editar]")?.dataset.editar;
@@ -145,7 +175,10 @@ document.addEventListener("DOMContentLoaded", () => {
       perfil: val("perfil"),
       senha: val("senha") || null,
       ativo: val("ativo") === "true",
-      cursoResponsavelId: Number(val("cursoResponsavelId")) || null,
+      cursoResponsavelId:
+        val("perfil") === "COORDENADOR_CURSO"
+          ? Number(val("cursoResponsavelId")) || null
+          : null,
       turmaIds: [...document.getElementById("turmaIds").selectedOptions].map(
         (o) => Number(o.value),
       ),

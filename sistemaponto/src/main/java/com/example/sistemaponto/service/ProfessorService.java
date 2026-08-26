@@ -70,10 +70,17 @@ public class ProfessorService {
     usuario.setCpf(limpar(dto.getCpf()));
     usuario.setEmail(dto.getEmail().trim().toLowerCase());
     usuario.setTelefone(limpar(dto.getTelefone()));
-    usuario.setPerfil(dto.getPerfil() == null ? Perfil.PROFESSOR : dto.getPerfil());
+    Perfil perfil = dto.getPerfil() == null ? Perfil.PROFESSOR : dto.getPerfil();
+    usuario.setPerfil(perfil);
     usuario.setAtivo(dto.isAtivo());
-    usuario.setCursoResponsavel(dto.getCursoResponsavelId() == null ? null : cursoRepository
-        .findById(dto.getCursoResponsavelId()).orElseThrow(() -> new RegraNegocioException("Curso não encontrado.")));
+    if (perfil == Perfil.COORDENADOR_CURSO) {
+      if (dto.getCursoResponsavelId() == null)
+        throw new RegraNegocioException("Selecione o curso sob responsabilidade do coordenador de curso.");
+      usuario.setCursoResponsavel(cursoRepository.findById(dto.getCursoResponsavelId())
+          .orElseThrow(() -> new RegraNegocioException("Curso não encontrado.")));
+    } else {
+      usuario.setCursoResponsavel(null);
+    }
     LinkedHashSet<Turma> turmas = new LinkedHashSet<>();
     if (dto.getTurmaIds() != null) dto.getTurmaIds().forEach(id -> turmas.add(turmaRepository.findById(id)
         .orElseThrow(() -> new RegraNegocioException("Turma não encontrada: " + id))));

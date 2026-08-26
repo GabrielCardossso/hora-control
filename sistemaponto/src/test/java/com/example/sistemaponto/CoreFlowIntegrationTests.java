@@ -62,6 +62,13 @@ class CoreFlowIntegrationTests {
     assertThat(encoder.matches("segura123", salvo.getSenha())).isTrue();
   }
 
+  @Test void coordenadorCursoExigeCursoSobResponsabilidade() throws Exception {
+    mvc.perform(post("/api/admin/usuarios").with(user("admin@teste.local").roles("ADMIN")).with(csrf())
+        .contentType("application/json").content("{\"nome\":\"Coordenador\",\"email\":\"coordenador@teste.local\",\"perfil\":\"COORDENADOR_CURSO\",\"senha\":\"segura123\",\"ativo\":true}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.mensagem").value("Selecione o curso sob responsabilidade do coordenador de curso."));
+  }
+
   @Test void editarCursoAtualizaDadosExibidosPelaTurmaVinculada() throws Exception {
     Curso curso = new Curso(); curso.setCodigo("TDS"); curso.setNome("Nome antigo"); curso.setAtivo(true); curso = cursos.save(curso);
     Turma turma = new Turma(); turma.setCodigo("TDS-02"); turma.setNome("Turma vinculada"); turma.setCurso(curso); turma.setAtivo(true); turma = turmas.save(turma);

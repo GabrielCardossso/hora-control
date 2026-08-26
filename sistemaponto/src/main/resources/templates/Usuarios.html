@@ -135,7 +135,7 @@
                   <th>Matrícula</th>
                   <th>E-mail</th>
                   <th>Perfil</th>
-                  <th>Curso/escopo</th>
+                  <th>Abrangência de acesso</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -198,6 +198,7 @@
                 <option value="COORDENADOR_EIXO">Coordenador de eixo</option>
                 <option value="ADMIN">Administrador</option>
               </select>
+              <small class="hc-muted" id="perfilAjuda"></small>
             </div>
             <div class="hc-field">
               <label for="senha"
@@ -210,11 +211,12 @@
                 autocomplete="new-password"
               />
             </div>
-            <div class="hc-field">
-              <label for="cursoResponsavelId">Curso de responsabilidade</label
+            <div class="hc-field" id="campoCursoResponsavel" hidden>
+              <label for="cursoResponsavelId">Curso sob responsabilidade</label
               ><select id="cursoResponsavelId">
-                <option value="">Nenhum/escopo geral</option>
+                <option value="">Selecione o curso</option>
               </select>
+              <small class="hc-muted">Define quais turmas e registros esse coordenador poderá acompanhar.</small>
             </div>
             <div class="hc-field">
               <label for="ativo">Situação</label
@@ -225,8 +227,9 @@
             </div>
             <div class="hc-field full">
               <label for="turmaIds"
-                >Turmas do professor (Ctrl para selecionar várias)</label
+                >Turmas em que ministra aulas (Ctrl para selecionar várias)</label
               ><select id="turmaIds" multiple size="6"></select>
+              <small class="hc-muted">Essas turmas são usadas no próprio registro de ponto, independentemente da abrangência de acesso.</small>
             </div>
           </div>
           <div class="hc-actions">
@@ -238,7 +241,7 @@
         </form>
       </div>
     </div>
-    <script th:src="@{/js/app.js(v=8)}"></script>
-    <script th:src="@{/js/Usuarios.js(v=8)}"></script>
+    <script th:src="@{/js/app.js(v=9)}"></script>
+    <script th:src="@{/js/Usuarios.js(v=9)}"></script>
   </body>
 </html>

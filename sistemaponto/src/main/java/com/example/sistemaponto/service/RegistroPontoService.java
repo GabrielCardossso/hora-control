@@ -49,7 +49,7 @@ public class RegistroPontoService {
       if (!turma.isAtivo())
         throw new RegraNegocioException("Esta turma está inativa.");
       Long turmaSelecionadaId = turma.getId();
-      if (professor.getPerfil() == Perfil.PROFESSOR
+      if (professor.getPerfil() != Perfil.ADMIN
           && professor.getTurmas().stream().noneMatch(t -> t.getId().equals(turmaSelecionadaId)))
         throw new RegraNegocioException("Esta turma não está vinculada ao seu cadastro.");
     }
@@ -138,8 +138,8 @@ public class RegistroPontoService {
     if (solicitante.getPerfil() == Perfil.COORDENADOR_CURSO && solicitante.getCursoResponsavel() != null) {
       Long cursoId = solicitante.getCursoResponsavel().getId();
       return registroRepository.findAllByOrderByEntradaDesc().stream()
-          .filter(r -> r.getTurma() != null && r.getTurma().getCurso() != null
-              && r.getTurma().getCurso().getId().equals(cursoId))
+          .filter(r -> r.getProfessor().getId().equals(solicitante.getId())
+              || pertenceAoCurso(r, cursoId))
           .toList();
     }
     return registroRepository.findByProfessorIdOrderByEntradaDesc(solicitante.getId());
@@ -157,8 +157,8 @@ public class RegistroPontoService {
     if (solicitante.getPerfil() == Perfil.COORDENADOR_CURSO && solicitante.getCursoResponsavel() != null) {
       Long cursoId = solicitante.getCursoResponsavel().getId();
       return professorRepository.findAllByOrderByNomeAsc().stream().filter(Professor::isAtivo)
-          .filter(
-              p -> p.getTurmas().stream().anyMatch(t -> t.getCurso() != null && t.getCurso().getId().equals(cursoId)))
+          .filter(p -> p.getId().equals(solicitante.getId())
+              || p.getTurmas().stream().anyMatch(t -> pertenceAoCurso(t, cursoId)))
           .toList();
     }
     LinkedHashMap<Long, Professor> mapa = new LinkedHashMap<>();
@@ -170,7 +170,7 @@ public class RegistroPontoService {
   @Transactional(readOnly = true)
   public List<Turma> turmasPermitidas(String email) {
     Professor solicitante = usuario(email);
-    if (solicitante.getPerfil() != Perfil.PROFESSOR)
+    if (solicitante.getPerfil() == Perfil.ADMIN)
       return turmaRepository.findByAtivoTrueOrderByCodigoAsc();
     return solicitante.getTurmas().stream()
         .filter(Turma::isAtivo)
@@ -198,6 +198,14 @@ public class RegistroPontoService {
     return usuario.getPerfil() == Perfil.COORDENADOR_CURSO && usuario.getCursoResponsavel() != null
         && registro.getTurma() != null && registro.getTurma().getCurso() != null
         && usuario.getCursoResponsavel().getId().equals(registro.getTurma().getCurso().getId());
+  }
+
+  private boolean pertenceAoCurso(RegistroPonto registro, Long cursoId) {
+    return registro.getTurma() != null && pertenceAoCurso(registro.getTurma(), cursoId);
+  }
+
+  private boolean pertenceAoCurso(Turma turma, Long cursoId) {
+    return turma.getCurso() != null && turma.getCurso().getId().equals(cursoId);
   }
 
   private boolean contem(String valor, String termo) {

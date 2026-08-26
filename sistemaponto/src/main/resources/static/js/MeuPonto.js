@@ -9,7 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const busca = document.getElementById("busca");
   const tbody = document.getElementById("corpoRegistros");
   let registrosAtuais = [];
+  let registrosResumoAtuais = [];
   let podeAjustar = false;
+  let usuarioAtual = null;
+  let inicializado = false;
   const dataHora = new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
@@ -69,11 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
       hcToast(e.message, "error");
     }
   }
-  function query() {
+  function query(professorIdForcado = undefined) {
     const q = new URLSearchParams();
     if (inicio.value) q.set("inicio", inicio.value);
     if (fim.value) q.set("fim", fim.value);
-    if (professor.value) q.set("professorId", professor.value);
+    const professorId =
+      professorIdForcado === undefined ? professor.value : professorIdForcado;
+    if (professorId) q.set("professorId", professorId);
     if (turma.value) q.set("turmaId", turma.value);
     if (status.value) q.set("status", status.value);
     if (busca.value.trim()) q.set("busca", busca.value.trim());
@@ -83,16 +88,28 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML =
       '<tr><td colspan="8" class="hc-empty">Carregando registros...</td></tr>';
     try {
-      const res = await hcFetch(`/api/registros?${query()}`);
-      render(await res.json());
+      const consultaLista = query();
+      const coordenador = usuarioAtual?.perfil?.startsWith("COORDENADOR_");
+      const consultaResumo = coordenador ? query(usuarioAtual.id) : consultaLista;
+      const [resLista, resResumo] = await Promise.all([
+        hcFetch(`/api/registros?${consultaLista}`),
+        consultaResumo === consultaLista
+          ? Promise.resolve(null)
+          : hcFetch(`/api/registros?${consultaResumo}`),
+      ]);
+      const registros = await resLista.json();
+      const registrosResumo = resResumo ? await resResumo.json() : registros;
+      render(registros, registrosResumo);
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="8" class="hc-empty">${esc(e.message)}</td></tr>`;
     }
   }
-  function render(registros) {
+  function render(registros, registrosResumo = registrosResumoAtuais) {
     registrosAtuais = registros;
-    document.getElementById("totalRegistros").textContent = registros.length;
-    const minutos = registros.reduce(
+    registrosResumoAtuais = registrosResumo;
+    document.getElementById("totalRegistros").textContent =
+      registrosResumo.length;
+    const minutos = registrosResumo.reduce(
       (s, r) => s + hcMinutesFromRecord(r),
       0,
     );
@@ -144,10 +161,28 @@ document.addEventListener("DOMContentLoaded", () => {
         busca.value.trim(),
     );
   }
-  document.addEventListener("hc:user-ready", (e) => {
-    podeAjustar = e.detail.perfil !== "PROFESSOR";
-    render(registrosAtuais);
-  });
+  function configurarUsuario(usuario) {
+    usuarioAtual = usuario;
+    podeAjustar = usuario.perfil !== "PROFESSOR";
+    const coordenador = usuario.perfil?.startsWith("COORDENADOR_");
+    document.getElementById("rotuloTotalRegistros").textContent = coordenador
+      ? "Seus registros"
+      : "Registros";
+    document.getElementById("rotuloTotalHoras").textContent = coordenador
+      ? "Suas horas trabalhadas"
+      : "Horas trabalhadas";
+  }
+
+  async function inicializar(usuario) {
+    if (inicializado) return;
+    inicializado = true;
+    configurarUsuario(usuario);
+    await opcoes();
+    await carregar();
+  }
+
+  document.addEventListener("hc:user-ready", (e) => inicializar(e.detail));
+  if (window.hcUser) inicializar(window.hcUser);
   const modal = document.getElementById("modalAjuste");
   const modalDetalhes = document.getElementById("modalDetalhesRegistro");
   let gatilhoDetalhes = null;
@@ -260,5 +295,4 @@ document.addEventListener("DOMContentLoaded", () => {
     return d.innerHTML;
   }
   aplicarPeriodo();
-  opcoes().then(carregar);
 });

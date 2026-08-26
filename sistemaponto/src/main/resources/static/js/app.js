@@ -324,8 +324,16 @@
   }
 
   const seletorPreenchimento = "button, a.hc-btn";
+  const animacoesPreenchimento = new WeakMap();
   function botaoDoEfeito(alvo) {
     return alvo instanceof Element ? alvo.closest(seletorPreenchimento) : null;
+  }
+  function cancelarAnimacaoPreenchimento(botao) {
+    const animacao = animacoesPreenchimento.get(botao);
+    if (!animacao) return;
+    cancelAnimationFrame(animacao.inicio);
+    cancelAnimationFrame(animacao.fim);
+    animacoesPreenchimento.delete(botao);
   }
   function posicionarPreenchimento(botao, evento) {
     const area = botao.getBoundingClientRect();
@@ -344,14 +352,19 @@
       botao.contains(evento.relatedTarget)
     )
       return;
+    cancelarAnimacaoPreenchimento(botao);
     botao.classList.add("hc-fill-button");
     const raio = posicionarPreenchimento(botao, evento);
     botao.style.setProperty("--hc-fill-radius", "0px");
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        botao.style.setProperty("--hc-fill-radius", `${raio}px`),
-      ),
-    );
+    const animacao = { inicio: 0, fim: 0 };
+    animacao.inicio = requestAnimationFrame(() => {
+      animacao.fim = requestAnimationFrame(() => {
+        if (botao.matches(":hover"))
+          botao.style.setProperty("--hc-fill-radius", `${raio}px`);
+        animacoesPreenchimento.delete(botao);
+      });
+    });
+    animacoesPreenchimento.set(botao, animacao);
   });
   document.addEventListener("pointerout", (evento) => {
     const botao = botaoDoEfeito(evento.target);
@@ -361,6 +374,7 @@
       botao.contains(evento.relatedTarget)
     )
       return;
+    cancelarAnimacaoPreenchimento(botao);
     posicionarPreenchimento(botao, evento);
     botao.style.setProperty("--hc-fill-radius", "0px");
   });

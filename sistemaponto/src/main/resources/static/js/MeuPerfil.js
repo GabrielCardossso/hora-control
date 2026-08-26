@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnPonto");
   let pontoAberto = null;
   let quantidadeTurmas = 0;
+  let usuarioAtual = null;
 
   const hoje = new Date();
   const dataRelogio = document.getElementById("dataRelogio");
@@ -34,10 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const inicio = new Date();
       inicio.setDate(1);
+      const filtroProprio = usuarioAtual?.id
+        ? `&professorId=${encodeURIComponent(usuarioAtual.id)}`
+        : "";
       const [turmasRes, abertoRes, registrosRes] = await Promise.all([
         hcFetch("/api/registros/turmas-permitidas"),
         hcFetch("/api/registros/aberto"),
-        hcFetch(`/api/registros?inicio=${inicio.toISOString().slice(0, 10)}`),
+        hcFetch(
+          `/api/registros?inicio=${inicio.toISOString().slice(0, 10)}${filtroProprio}`,
+        ),
       ]);
       const turmas = await turmasRes.json();
       quantidadeTurmas = turmas.length;
@@ -184,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function configurarPainel(usuario) {
     if (painelInicializado) return;
     painelInicializado = true;
+    usuarioAtual = usuario;
     const admin = usuario.perfil === "ADMIN";
     document.getElementById("painelAdmin").hidden = !admin;
     document.getElementById("painelProfessor").hidden = admin;
