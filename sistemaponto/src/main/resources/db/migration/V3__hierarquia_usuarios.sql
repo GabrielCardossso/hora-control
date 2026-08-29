@@ -13,9 +13,10 @@ CREATE TABLE usuarios (
 INSERT INTO usuarios (id, nome, matricula, email, cpf, telefone, senha, ativo, data_criacao)
 SELECT id, nome, matricula, email, cpf, telefone, senha,
        CASE
-         WHEN perfil IN ('COORDENADOR_NUCLEO', 'COORDENADOR_EIXO') THEN FALSE
-         WHEN perfil = 'COORDENADOR_CURSO' AND curso_responsavel_id IS NULL THEN FALSE
-         ELSE ativo
+         WHEN perfil = 'PROFESSOR' THEN ativo
+         WHEN perfil = 'COORDENADOR_CURSO' AND curso_responsavel_id IS NOT NULL THEN ativo
+         WHEN perfil IN ('ADMIN', 'ADMINISTRADOR') THEN ativo
+         ELSE FALSE
        END,
        data_criacao
 FROM professores;
@@ -47,16 +48,17 @@ CREATE TABLE gestor (
 
 INSERT INTO professor (usuario_id)
 SELECT id FROM professores
-WHERE perfil = 'PROFESSOR'
-   OR perfil IN ('COORDENADOR_NUCLEO', 'COORDENADOR_EIXO')
-   OR (perfil = 'COORDENADOR_CURSO' AND curso_responsavel_id IS NULL);
+WHERE NOT (
+  COALESCE(perfil, '') IN ('ADMIN', 'ADMINISTRADOR')
+  OR (COALESCE(perfil, '') = 'COORDENADOR_CURSO' AND curso_responsavel_id IS NOT NULL)
+);
 
 INSERT INTO coordenador (usuario_id, curso_responsavel_id)
 SELECT id, curso_responsavel_id FROM professores
 WHERE perfil = 'COORDENADOR_CURSO' AND curso_responsavel_id IS NOT NULL;
 
 INSERT INTO gestor (usuario_id)
-SELECT id FROM professores WHERE perfil = 'ADMIN';
+SELECT id FROM professores WHERE perfil IN ('ADMIN', 'ADMINISTRADOR');
 
 CREATE TABLE coordenador_turma (
     coordenador_id BIGINT NOT NULL,

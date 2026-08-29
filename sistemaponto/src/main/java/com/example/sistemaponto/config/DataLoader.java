@@ -16,8 +16,8 @@ public class DataLoader implements CommandLineRunner {
   private final String gestorPassword;
 
   public DataLoader(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-      @Value("${horacontrol.admin.email}") String gestorEmail,
-      @Value("${horacontrol.admin.password}") String gestorPassword) {
+      @Value("${horacontrol.gestor.email}") String gestorEmail,
+      @Value("${horacontrol.gestor.password}") String gestorPassword) {
     this.usuarioRepository = usuarioRepository;
     this.passwordEncoder = passwordEncoder;
     this.gestorEmail = gestorEmail;
@@ -28,6 +28,9 @@ public class DataLoader implements CommandLineRunner {
   public void run(String... args) {
     Usuario usuario = usuarioRepository.findByEmailIgnoreCase(gestorEmail).orElse(null);
     if (usuario == null) {
+      if (gestorPassword == null || gestorPassword.length() < 6)
+        throw new IllegalStateException(
+            "Defina GESTOR_PASSWORD com pelo menos 6 caracteres para criar o gestor inicial.");
       Gestor gestor = new Gestor();
       gestor.setNome("Gestor educacional");
       gestor.setEmail(gestorEmail.toLowerCase());

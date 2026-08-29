@@ -43,7 +43,7 @@ public class RelatorioService {
 
       PdfPTable table = new PdfPTable(new float[] { 2.2f, 1.7f, 1.2f, 1.6f, 1.6f, .8f, 2.5f });
       table.setWidthPercentage(100);
-      String[] headers = { "Professor", "Turma", "Código", "Entrada", "Saída", "Horas", "Observação/ajuste" };
+      String[] headers = { "Usuário", "Turma", "Código", "Entrada", "Saída", "Horas", "Observação/ajuste" };
       for (String header : headers)
         table.addCell(celula(header, headerFont, new Color(75, 71, 153)));
       for (RegistroPonto registro : registros) {

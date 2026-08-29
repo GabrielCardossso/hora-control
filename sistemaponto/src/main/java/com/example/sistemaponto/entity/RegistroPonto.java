@@ -14,6 +14,7 @@ import java.math.RoundingMode;
 
 import com.example.sistemaponto.enums.StatusPonto;
 import com.example.sistemaponto.enums.TipoRegistro;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 
@@ -25,6 +26,8 @@ public class RegistroPonto {
 
   @ManyToOne
   @jakarta.persistence.JoinColumn(name = "usuario_id", nullable = false)
+  @JsonIgnoreProperties({ "cpf", "email", "telefone", "matricula", "senha", "ativo",
+      "dataCriacao", "turmas", "cursoResponsavel" })
   private Usuario usuario;
 
   @ManyToOne
@@ -51,6 +54,8 @@ public class RegistroPonto {
   private String justificativaAjuste;
 
   @ManyToOne
+  @JsonIgnoreProperties({ "cpf", "email", "telefone", "matricula", "senha", "ativo",
+      "dataCriacao", "turmas", "cursoResponsavel" })
   private Usuario alteradoPor;
 
   private LocalDateTime dataAlteracao;
