@@ -4,7 +4,7 @@ document.addEventListener("hc:user-ready", (e) => {
   document.getElementById("emailConta").value = u.email || "";
   document.getElementById("matriculaConta").value =
     u.matricula || "Não informada";
-  document.getElementById("perfilConta").value = (u.perfil || "").replaceAll(
+  document.getElementById("perfilConta").value = (u.tipoUsuario || "").replaceAll(
     "_",
     " ",
   );

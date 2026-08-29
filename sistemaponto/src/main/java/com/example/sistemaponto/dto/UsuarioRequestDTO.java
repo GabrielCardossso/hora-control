@@ -1,9 +1,7 @@
 package com.example.sistemaponto.dto;
 
-import com.example.sistemaponto.enums.Perfil;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -17,8 +15,8 @@ public class UsuarioRequestDTO {
   @Email
   private String email;
   private String telefone;
-  @NotNull
-  private Perfil perfil;
+  @NotBlank
+  private String tipoUsuario;
   @Size(min = 6)
   private String senha;
   private boolean ativo = true;
@@ -65,12 +63,12 @@ public class UsuarioRequestDTO {
     this.telefone = telefone;
   }
 
-  public Perfil getPerfil() {
-    return perfil;
+  public String getTipoUsuario() {
+    return tipoUsuario;
   }
 
-  public void setPerfil(Perfil perfil) {
-    this.perfil = perfil;
+  public void setTipoUsuario(String tipoUsuario) {
+    this.tipoUsuario = tipoUsuario;
   }
 
   public String getSenha() {

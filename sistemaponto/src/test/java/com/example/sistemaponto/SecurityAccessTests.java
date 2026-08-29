@@ -1,7 +1,10 @@
 package com.example.sistemaponto;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,32 +25,28 @@ class SecurityAccessTests {
   }
 
   @Test @WithMockUser(roles = "PROFESSOR")
-  void professorNaoAcessaGestaoDeUsuarios() throws Exception {
+  void professorNaoAcessaGestao() throws Exception {
     mvc.perform(get("/usuarios")).andExpect(status().isForbidden());
+    mvc.perform(get("/gestao-turmas")).andExpect(status().isForbidden());
   }
 
-  @Test @WithMockUser(roles = "ADMIN")
-  void adminAcessaGestaoDeUsuarios() throws Exception {
-    mvc.perform(get("/usuarios")).andExpect(status().isOk()).andExpect(view().name("Usuarios"));
-  }
-
-  @Test @WithMockUser(roles = "ADMIN")
-  void adminAcessaGestaoDeTurmas() throws Exception {
-    mvc.perform(get("/gestao-turmas")).andExpect(status().isOk()).andExpect(view().name("Turmas"));
-  }
-
-  @Test @WithMockUser(roles = "PROFESSOR")
-  void professorNaoAcessaRelatoriosAdministrativos() throws Exception {
-    mvc.perform(get("/relatorios")).andExpect(status().isForbidden());
-  }
-
-  @Test @WithMockUser(roles = "ADMIN")
-  void adminAcessaRelatoriosAdministrativos() throws Exception {
+  @Test @WithMockUser(roles = "COORDENADOR")
+  void coordenadorNaoAcessaGestaoMasAcessaRelatorioProprio() throws Exception {
+    mvc.perform(get("/usuarios")).andExpect(status().isForbidden());
     mvc.perform(get("/relatorios")).andExpect(status().isOk()).andExpect(view().name("Relatorios"));
   }
 
-  @Test @WithMockUser(roles = "ADMIN")
-  void exportacaoExcelNaoExisteMais() throws Exception {
-    mvc.perform(get("/api/relatorios/excel")).andExpect(status().isNotFound());
+  @Test @WithMockUser(roles = "GESTOR")
+  void gestorAcessaPainelAdministrativo() throws Exception {
+    mvc.perform(get("/usuarios")).andExpect(status().isOk()).andExpect(view().name("Usuarios"));
+    mvc.perform(get("/gestao-turmas")).andExpect(status().isOk()).andExpect(view().name("Turmas"));
+    mvc.perform(get("/relatorios")).andExpect(status().isOk()).andExpect(view().name("Relatorios"));
+  }
+
+  @Test @WithMockUser(roles = "GESTOR")
+  void gestorNaoPodeAbrirPonto() throws Exception {
+    mvc.perform(post("/api/registros/abrir").with(csrf()).contentType("application/json")
+        .content("{\"tipo\":\"AULA_NORMAL\",\"turmaId\":1}"))
+        .andExpect(status().isForbidden());
   }
 }

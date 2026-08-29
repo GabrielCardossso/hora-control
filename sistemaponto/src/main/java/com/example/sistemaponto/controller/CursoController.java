@@ -21,19 +21,19 @@ public class CursoController {
   }
 
   @GetMapping("/todos")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('GESTOR')")
   public List<Curso> todos() {
     return service.listar();
   }
 
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('GESTOR')")
   public Curso salvar(@RequestBody Curso curso) {
     return service.salvar(curso);
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('GESTOR')")
   public Curso atualizar(@PathVariable Long id, @RequestBody Curso curso) {
     return service.atualizar(id, curso);
   }

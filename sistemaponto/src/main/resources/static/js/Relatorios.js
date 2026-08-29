@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const q = new URLSearchParams();
     if (inicio.value) q.set("inicio", inicio.value);
     if (fim.value) q.set("fim", fim.value);
-    if (professor.value) q.set("professorId", professor.value);
+    if (professor.value) q.set("usuarioId", professor.value);
     if (turma.value) q.set("turmaId", turma.value);
     if (status.value) q.set("status", status.value);
     return q.toString();
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const [t, p] = await Promise.all([
         hcFetch("/api/turmas"),
-        hcFetch("/api/registros/professores/visiveis"),
+        hcFetch("/api/relatorios/usuarios"),
       ]);
       const [ts, ps] = await Promise.all([t.json(), p.json()]);
       turma.innerHTML =
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tb.innerHTML =
       '<tr><td colspan="5" class="hc-empty">Calculando...</td></tr>';
     try {
-      const r = await hcFetch(`/api/registros?${parametrosAplicados}`),
+      const r = await hcFetch(`/api/relatorios/registros?${parametrosAplicados}`),
         lista = await r.json();
       const minutos = lista.reduce(
         (s, x) => s + hcMinutesFromRecord(x),
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .slice(0, 50)
             .map(
               (x) =>
-                `<tr><td data-label="Professor">${esc(x.professor.nome)}</td><td data-label="Código/turma">${esc(x.turma ? `${x.turma.codigo} - ${x.turma.nome}` : x.descricao || "Extra")}</td><td data-label="Data">${data.format(new Date(x.entrada))}</td><td data-label="Horas">${hcFormatMinutes(hcMinutesFromRecord(x))}</td><td data-label="Status">${esc(x.status)}</td></tr>`,
+                `<tr><td data-label="Usuário">${esc(x.usuario.nome)}</td><td data-label="Código/turma">${esc(x.turma ? `${x.turma.codigo} - ${x.turma.nome}` : x.descricao || "Extra")}</td><td data-label="Data">${data.format(new Date(x.entrada))}</td><td data-label="Horas">${hcFormatMinutes(hcMinutesFromRecord(x))}</td><td data-label="Status">${esc(x.status)}</td></tr>`,
             )
             .join("")
         : '<tr><td colspan="5" class="hc-empty">Nenhum registro encontrado.</td></tr>';

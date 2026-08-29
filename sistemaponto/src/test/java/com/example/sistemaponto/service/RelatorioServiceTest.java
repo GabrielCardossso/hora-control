@@ -23,7 +23,7 @@ class RelatorioServiceTest {
     turma.setCodigo("TDS-01");
     turma.setNome("Desenvolvimento");
     RegistroPonto registro = new RegistroPonto();
-    registro.setProfessor(professor);
+    registro.setUsuario(professor);
     registro.setTurma(turma);
     registro.setEntrada(LocalDateTime.of(2026, 8, 10, 8, 0));
     registro.setSaida(LocalDateTime.of(2026, 8, 10, 10, 30));

@@ -3,227 +3,191 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formUsuario");
   const tbody = document.getElementById("corpoUsuarios");
   const formFiltros = document.getElementById("formFiltrosUsuarios");
+  const tipoUsuario = document.getElementById("perfil");
+  const cursoResponsavel = document.getElementById("cursoResponsavelId");
+  const campoCursoResponsavel = document.getElementById("campoCursoResponsavel");
+  const tipoAjuda = document.getElementById("perfilAjuda");
   let usuarios = [];
   let cursos = [];
   let turmas = [];
-  const perfil = document.getElementById("perfil");
-  const cursoResponsavel = document.getElementById("cursoResponsavelId");
-  const campoCursoResponsavel = document.getElementById("campoCursoResponsavel");
-  const perfilAjuda = document.getElementById("perfilAjuda");
-  const descricoesPerfil = {
-    PROFESSOR: "Visualiza somente os próprios pontos e as turmas vinculadas.",
-    COORDENADOR_CURSO:
-      "Visualiza os próprios pontos e os registros das turmas do curso selecionado.",
-    COORDENADOR_NUCLEO: "Visualiza os registros de todos os cursos.",
-    COORDENADOR_EIXO: "Visualiza os registros de todos os cursos.",
-    ADMIN: "Possui acesso geral aos registros e aos cadastros do sistema.",
+
+  const descricoes = {
+    PROFESSOR: "Registra e visualiza somente o próprio ponto nas turmas vinculadas.",
+    COORDENADOR: "Registra o próprio ponto e visualiza os professores do curso, sem poder ajustá-los.",
+    GESTOR: "Administra usuários, cursos e turmas, ajusta pontos e possui relatórios globais; não registra ponto.",
   };
-  const esc = (v) => {
-    const d = document.createElement("div");
-    d.textContent = v ?? "";
-    return d.innerHTML;
+  const esc = (valor) => {
+    const elemento = document.createElement("div");
+    elemento.textContent = valor ?? "";
+    return elemento.innerHTML;
   };
+  const val = (id) => document.getElementById(id).value.trim();
+
   async function carregar() {
     try {
-      const [u, c, t] = await Promise.all([
+      const [usuariosRes, cursosRes, turmasRes] = await Promise.all([
         hcFetch("/api/admin/usuarios"),
         hcFetch("/api/cursos/todos"),
         hcFetch("/api/turmas/todas"),
       ]);
       [usuarios, cursos, turmas] = await Promise.all([
-        u.json(),
-        c.json(),
-        t.json(),
+        usuariosRes.json(), cursosRes.json(), turmasRes.json(),
       ]);
       popularOpcoes();
       render();
-    } catch (e) {
-      hcToast(e.message, "error");
+    } catch (erro) {
+      hcToast(erro.message, "error");
     }
   }
+
   function render() {
     const busca = val("filtroUsuarioBusca").toLocaleLowerCase("pt-BR");
-    const perfil = val("filtroUsuarioPerfil");
+    const tipo = val("filtroUsuarioPerfil");
     const cursoId = Number(val("filtroUsuarioCurso")) || null;
     const turmaId = Number(val("filtroUsuarioTurma")) || null;
     const status = val("filtroUsuarioStatus");
     const ordem = val("filtroUsuarioOrdem") || "az";
-    const lista = usuarios
-      .filter((u) => {
-        const texto = `${u.nome || ""} ${u.matricula || ""} ${u.email || ""}`.toLocaleLowerCase("pt-BR");
-        const cursosDoUsuario = new Set([
-          u.cursoResponsavel?.id,
-          ...(u.turmas || []).map((t) => t.curso?.id),
-        ]);
-        return (
-          (!busca || texto.includes(busca)) &&
-          (!perfil || u.perfil === perfil) &&
-          (!cursoId || cursosDoUsuario.has(cursoId)) &&
-          (!turmaId || (u.turmas || []).some((t) => t.id === turmaId)) &&
-          (!status || String(u.ativo) === status)
-        );
-      })
-      .sort((a, b) => {
-        if (ordem === "recentes")
-          return new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0);
-        const comparacao = (a.nome || "").localeCompare(b.nome || "", "pt-BR");
-        return ordem === "za" ? -comparacao : comparacao;
-      });
-    if (!lista.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="7" class="hc-empty">Nenhum usuário encontrado.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = lista
-      .map(
-        (u) =>
-          `<tr><td data-label="Nome"><strong>${esc(u.nome)}</strong></td><td data-label="Matrícula">${esc(u.matricula || "—")}</td><td data-label="E-mail">${esc(u.email)}</td><td data-label="Perfil">${esc((u.perfil || "").replaceAll("_", " "))}</td><td data-label="Abrangência de acesso">${esc(descreverAbrangencia(u))}</td><td data-label="Status"><span class="hc-status ${u.ativo ? "closed" : "open"}">${u.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><button class="hc-btn secondary" data-editar="${u.id}"><i class="fi fi-rr-edit" aria-hidden="true"></i>Editar</button></td></tr>`,
-      )
-      .join("");
+    const lista = usuarios.filter((usuario) => {
+      const texto = `${usuario.nome || ""} ${usuario.matricula || ""} ${usuario.email || ""}`
+        .toLocaleLowerCase("pt-BR");
+      const cursosDoUsuario = new Set([
+        usuario.cursoResponsavel?.id,
+        ...(usuario.turmas || []).map((turma) => turma.curso?.id),
+      ]);
+      return (!busca || texto.includes(busca))
+        && (!tipo || usuario.tipoUsuario === tipo)
+        && (!cursoId || cursosDoUsuario.has(cursoId))
+        && (!turmaId || (usuario.turmas || []).some((turma) => turma.id === turmaId))
+        && (!status || String(usuario.ativo) === status);
+    }).sort((a, b) => {
+      if (ordem === "recentes") return new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0);
+      const comparacao = (a.nome || "").localeCompare(b.nome || "", "pt-BR");
+      return ordem === "za" ? -comparacao : comparacao;
+    });
+    tbody.innerHTML = lista.length ? lista.map((usuario) =>
+      `<tr><td data-label="Nome"><strong>${esc(usuario.nome)}</strong></td>`
+      + `<td data-label="Matrícula">${esc(usuario.matricula || "—")}</td>`
+      + `<td data-label="E-mail">${esc(usuario.email)}</td>`
+      + `<td data-label="Tipo">${esc(usuario.tipoUsuario)}</td>`
+      + `<td data-label="Abrangência de acesso">${esc(descreverAbrangencia(usuario))}</td>`
+      + `<td data-label="Status"><span class="hc-status ${usuario.ativo ? "closed" : "open"}">${usuario.ativo ? "Ativo" : "Inativo"}</span></td>`
+      + `<td data-label="Ações"><button class="hc-btn secondary" data-editar="${usuario.id}"><i class="fi fi-rr-edit" aria-hidden="true"></i>Editar</button></td></tr>`
+    ).join("") : '<tr><td colspan="7" class="hc-empty">Nenhum usuário encontrado.</td></tr>';
   }
+
   function descreverAbrangencia(usuario) {
-    if (usuario.perfil === "PROFESSOR") return "Somente o próprio ponto";
-    if (usuario.perfil === "COORDENADOR_CURSO")
-      return usuario.cursoResponsavel
-        ? `Curso: ${usuario.cursoResponsavel.nome}`
-        : "Curso não definido";
-    if (usuario.perfil === "ADMIN") return "Acesso geral e administrativo";
-    return "Todos os cursos";
+    if (usuario.tipoUsuario === "PROFESSOR") return "Somente o próprio ponto";
+    if (usuario.tipoUsuario === "COORDENADOR")
+      return usuario.cursoResponsavel ? `Curso: ${usuario.cursoResponsavel.nome}` : "Curso não definido";
+    return "Gestão e relatórios globais";
   }
+
   function popularOpcoes() {
-    const filtroCursoAtual = document.getElementById("filtroUsuarioCurso").value;
-    const filtroTurmaAtual = document.getElementById("filtroUsuarioTurma").value;
-    document.getElementById("cursoResponsavelId").innerHTML =
-      '<option value="">Selecione o curso</option>' +
-      cursos
-        .map(
-          (c) =>
-            `<option value="${c.id}">${esc(c.codigo)} - ${esc(c.nome)}</option>`,
-        )
-        .join("");
-    document.getElementById("turmaIds").innerHTML = turmas
-      .map(
-        (t) =>
-          `<option value="${t.id}">${esc(t.codigo)} - ${esc(t.nome)}</option>`,
-      )
-      .join("");
-    document.getElementById("filtroUsuarioCurso").innerHTML =
-      '<option value="">Todos</option>' +
-      cursos.map((c) => `<option value="${c.id}">${esc(c.codigo)} - ${esc(c.nome)}</option>`).join("");
-    document.getElementById("filtroUsuarioTurma").innerHTML =
-      '<option value="">Todas</option>' +
-      turmas.map((t) => `<option value="${t.id}">${esc(t.codigo)} - ${esc(t.nome)}</option>`).join("");
-    document.getElementById("filtroUsuarioCurso").value = filtroCursoAtual;
-    document.getElementById("filtroUsuarioTurma").value = filtroTurmaAtual;
+    const filtroCurso = val("filtroUsuarioCurso");
+    const filtroTurma = val("filtroUsuarioTurma");
+    const opcoesCursos = cursos.map((curso) =>
+      `<option value="${curso.id}">${esc(curso.codigo)} - ${esc(curso.nome)}</option>`).join("");
+    const opcoesTurmas = turmas.map((turma) =>
+      `<option value="${turma.id}">${esc(turma.codigo)} - ${esc(turma.nome)}</option>`).join("");
+    cursoResponsavel.innerHTML = '<option value="">Selecione o curso</option>' + opcoesCursos;
+    document.getElementById("turmaIds").innerHTML = opcoesTurmas;
+    document.getElementById("filtroUsuarioCurso").innerHTML = '<option value="">Todos</option>' + opcoesCursos;
+    document.getElementById("filtroUsuarioTurma").innerHTML = '<option value="">Todas</option>' + opcoesTurmas;
+    document.getElementById("filtroUsuarioCurso").value = filtroCurso;
+    document.getElementById("filtroUsuarioTurma").value = filtroTurma;
   }
-  function atualizarAbrangencia() {
-    const coordenadorCurso = perfil.value === "COORDENADOR_CURSO";
-    campoCursoResponsavel.hidden = !coordenadorCurso;
-    cursoResponsavel.required = coordenadorCurso;
-    if (!coordenadorCurso) cursoResponsavel.value = "";
-    perfilAjuda.textContent = descricoesPerfil[perfil.value] || "";
+
+  function atualizarCamposDoTipo() {
+    const coordenador = tipoUsuario.value === "COORDENADOR";
+    const gestor = tipoUsuario.value === "GESTOR";
+    campoCursoResponsavel.hidden = !coordenador;
+    cursoResponsavel.required = coordenador;
+    if (!coordenador) cursoResponsavel.value = "";
+    const campoTurmas = document.getElementById("turmaIds").closest(".hc-field");
+    campoTurmas.hidden = gestor;
+    if (gestor) [...document.getElementById("turmaIds").options].forEach((opcao) => opcao.selected = false);
+    tipoAjuda.textContent = descricoes[tipoUsuario.value] || "";
   }
-  function abrir(u = null) {
+
+  function abrir(usuario = null) {
     form.reset();
-    document.getElementById("usuarioId").value = u?.id || "";
-    document.getElementById("tituloModal").textContent = u
-      ? "Editar usuário"
-      : "Novo usuário";
-    document.getElementById("senha").required = !u;
-    document.getElementById("senhaAjuda").textContent = u
-      ? "(deixe vazio para manter)"
-      : "";
-    if (u) {
-      ["nome", "matricula", "cpf", "telefone", "email", "perfil"].forEach(
-        (k) => (document.getElementById(k).value = u[k] || ""),
-      );
-      document.getElementById("ativo").value = String(u.ativo);
-      document.getElementById("cursoResponsavelId").value =
-        u.cursoResponsavel?.id || "";
-      const ids = new Set((u.turmas || []).map((t) => t.id));
-      [...document.getElementById("turmaIds").options].forEach(
-        (o) => (o.selected = ids.has(Number(o.value))),
-      );
+    document.getElementById("usuarioId").value = usuario?.id || "";
+    document.getElementById("tituloModal").textContent = usuario ? "Editar usuário" : "Novo usuário";
+    document.getElementById("senha").required = !usuario;
+    document.getElementById("senhaAjuda").textContent = usuario ? "(deixe vazio para manter)" : "";
+    tipoUsuario.disabled = Boolean(usuario);
+    if (usuario) {
+      ["nome", "matricula", "cpf", "telefone", "email"].forEach((campo) =>
+        document.getElementById(campo).value = usuario[campo] || "");
+      tipoUsuario.value = usuario.tipoUsuario;
+      document.getElementById("ativo").value = String(usuario.ativo);
+      cursoResponsavel.value = usuario.cursoResponsavel?.id || "";
+      const ids = new Set((usuario.turmas || []).map((turma) => turma.id));
+      [...document.getElementById("turmaIds").options].forEach((opcao) =>
+        opcao.selected = ids.has(Number(opcao.value)));
     }
-    atualizarAbrangencia();
+    atualizarCamposDoTipo();
     modal.classList.add("open");
     document.getElementById("nome").focus();
   }
-  document
-    .getElementById("novoUsuario")
-    .addEventListener("click", () => abrir());
-  perfil.addEventListener("change", atualizarAbrangencia);
-  document.addEventListener("click", (e) => {
-    if (e.target.matches("[data-fechar]")) modal.classList.remove("open");
-    const id = e.target.closest("[data-editar]")?.dataset.editar;
-    if (id) abrir(usuarios.find((u) => u.id === Number(id)));
+
+  document.getElementById("novoUsuario").addEventListener("click", () => abrir());
+  tipoUsuario.addEventListener("change", atualizarCamposDoTipo);
+  document.addEventListener("click", (evento) => {
+    if (evento.target.matches("[data-fechar]")) modal.classList.remove("open");
+    const id = evento.target.closest("[data-editar]")?.dataset.editar;
+    if (id) abrir(usuarios.find((usuario) => usuario.id === Number(id)));
   });
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.classList.remove("open");
+  modal.addEventListener("click", (evento) => {
+    if (evento.target === modal) modal.classList.remove("open");
   });
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = document.getElementById("usuarioId").value;
-    const btn = form.querySelector("button[type=submit]");
-    btn.disabled = true;
+
+  form.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const id = val("usuarioId");
+    const botao = form.querySelector("button[type=submit]");
+    botao.disabled = true;
+    const tipo = tipoUsuario.value;
     const body = {
-      nome: val("nome"),
-      matricula: val("matricula"),
-      cpf: val("cpf"),
-      telefone: val("telefone"),
-      email: val("email"),
-      perfil: val("perfil"),
-      senha: val("senha") || null,
-      ativo: val("ativo") === "true",
-      cursoResponsavelId:
-        val("perfil") === "COORDENADOR_CURSO"
-          ? Number(val("cursoResponsavelId")) || null
-          : null,
-      turmaIds: [...document.getElementById("turmaIds").selectedOptions].map(
-        (o) => Number(o.value),
-      ),
+      nome: val("nome"), matricula: val("matricula"), cpf: val("cpf"),
+      telefone: val("telefone"), email: val("email"), tipoUsuario: tipo,
+      senha: val("senha") || null, ativo: val("ativo") === "true",
+      cursoResponsavelId: tipo === "COORDENADOR" ? Number(cursoResponsavel.value) || null : null,
+      turmaIds: tipo === "GESTOR" ? [] : [...document.getElementById("turmaIds").selectedOptions]
+        .map((opcao) => Number(opcao.value)),
     };
     try {
       await hcFetch(id ? `/api/admin/usuarios/${id}` : "/api/admin/usuarios", {
-        method: id ? "PUT" : "POST",
-        body: JSON.stringify(body),
+        method: id ? "PUT" : "POST", body: JSON.stringify(body),
       });
       hcToast("Usuário salvo com sucesso.");
       modal.classList.remove("open");
       await carregar();
-    } catch (err) {
-      hcToast(err.message, "error");
+    } catch (erro) {
+      hcToast(erro.message, "error");
     } finally {
-      btn.disabled = false;
+      botao.disabled = false;
     }
   });
-  formFiltros.addEventListener("submit", (e) => {
-    e.preventDefault();
+
+  formFiltros.addEventListener("submit", (evento) => {
+    evento.preventDefault();
     hcSetFiltersActive("filtrosUsuarios", temFiltros());
     hcCloseFilters("filtrosUsuarios");
     render();
   });
-  document.querySelectorAll("[data-limpar-usuarios]").forEach((button) =>
-    button.addEventListener("click", () => {
+  document.querySelectorAll("[data-limpar-usuarios]").forEach((botao) =>
+    botao.addEventListener("click", () => {
       formFiltros.reset();
       hcSetFiltersActive("filtrosUsuarios", false);
       hcCloseFilters("filtrosUsuarios");
       render();
-    }),
-  );
+    }));
   function temFiltros() {
-    return Boolean(
-      val("filtroUsuarioBusca") ||
-        val("filtroUsuarioPerfil") ||
-        val("filtroUsuarioCurso") ||
-        val("filtroUsuarioTurma") ||
-        val("filtroUsuarioStatus") ||
-        val("filtroUsuarioOrdem") === "za" ||
-        val("filtroUsuarioOrdem") === "recentes",
-    );
+    return Boolean(val("filtroUsuarioBusca") || val("filtroUsuarioPerfil")
+      || val("filtroUsuarioCurso") || val("filtroUsuarioTurma")
+      || val("filtroUsuarioStatus") || ["za", "recentes"].includes(val("filtroUsuarioOrdem")));
   }
-  function val(id) {
-    return document.getElementById(id).value.trim();
-  }
+
   carregar();
 });

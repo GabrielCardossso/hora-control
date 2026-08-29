@@ -425,26 +425,22 @@
         .querySelectorAll("[data-user-role]")
         .forEach(
           (el) =>
-            (el.textContent = (user.perfil || "PROFESSOR").replaceAll(
+            (el.textContent = (user.tipoUsuario || "PROFESSOR").replaceAll(
               "_",
               " ",
             )),
         );
       document
-        .querySelectorAll('[data-role="ADMIN"]')
-        .forEach((el) => (el.hidden = user.perfil !== "ADMIN"));
+        .querySelectorAll('[data-role="GESTOR"]')
+        .forEach((el) => (el.hidden = user.tipoUsuario !== "GESTOR"));
       document
-        .querySelectorAll('[data-hide-role="ADMIN"]')
-        .forEach((el) => (el.hidden = user.perfil === "ADMIN"));
+        .querySelectorAll('[data-hide-role="GESTOR"]')
+        .forEach((el) => (el.hidden = user.tipoUsuario === "GESTOR"));
       document
         .querySelectorAll("[data-role-global]")
         .forEach(
           (el) =>
-            (el.hidden = ![
-              "ADMIN",
-              "COORDENADOR_EIXO",
-              "COORDENADOR_NUCLEO",
-            ].includes(user.perfil)),
+            (el.hidden = user.tipoUsuario !== "GESTOR"),
         );
       setupMobileNavigation();
       document.dispatchEvent(

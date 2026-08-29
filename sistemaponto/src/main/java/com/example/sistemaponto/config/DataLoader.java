@@ -1,45 +1,44 @@
 package com.example.sistemaponto.config;
 
-import com.example.sistemaponto.repository.ProfessorRepository;
+import com.example.sistemaponto.entity.Gestor;
+import com.example.sistemaponto.entity.Usuario;
+import com.example.sistemaponto.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Value;
-import com.example.sistemaponto.enums.Perfil;
-
-import com.example.sistemaponto.entity.Professor;
 
 @Component
 public class DataLoader implements CommandLineRunner {
-
-  private final ProfessorRepository professorRepository;
+  private final UsuarioRepository usuarioRepository;
   private final PasswordEncoder passwordEncoder;
-  private final String adminEmail;
-  private final String adminPassword;
+  private final String gestorEmail;
+  private final String gestorPassword;
 
-  public DataLoader(ProfessorRepository professorRepository,
-      PasswordEncoder passwordEncoder,
-      @Value("${horacontrol.admin.email}") String adminEmail,
-      @Value("${horacontrol.admin.password}") String adminPassword) {
-    this.professorRepository = professorRepository;
+  public DataLoader(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+      @Value("${horacontrol.admin.email}") String gestorEmail,
+      @Value("${horacontrol.admin.password}") String gestorPassword) {
+    this.usuarioRepository = usuarioRepository;
     this.passwordEncoder = passwordEncoder;
-    this.adminEmail = adminEmail;
-    this.adminPassword = adminPassword;
-
+    this.gestorEmail = gestorEmail;
+    this.gestorPassword = gestorPassword;
   }
 
   @Override
   public void run(String... args) {
-
-    Professor professor = professorRepository.findByEmailIgnoreCase(adminEmail).orElseGet(Professor::new);
-
-    if (professor.getId() == null) {
-      professor.setNome("Administrador");
-      professor.setEmail(adminEmail.toLowerCase());
-      professor.setSenha(passwordEncoder.encode(adminPassword));
+    Usuario usuario = usuarioRepository.findByEmailIgnoreCase(gestorEmail).orElse(null);
+    if (usuario == null) {
+      Gestor gestor = new Gestor();
+      gestor.setNome("Gestor educacional");
+      gestor.setEmail(gestorEmail.toLowerCase());
+      gestor.setSenha(passwordEncoder.encode(gestorPassword));
+      gestor.setAtivo(true);
+      usuarioRepository.save(gestor);
+      return;
     }
-    professor.setPerfil(Perfil.ADMIN);
-    professor.setAtivo(true);
-    professorRepository.save(professor);
+    if (!(usuario instanceof Gestor))
+      throw new IllegalStateException("O e-mail administrativo deve pertencer a um Gestor.");
+    usuario.setAtivo(true);
+    usuarioRepository.save(usuario);
   }
 }

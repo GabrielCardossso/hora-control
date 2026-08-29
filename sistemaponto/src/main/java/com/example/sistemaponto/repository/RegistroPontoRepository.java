@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 public interface RegistroPontoRepository
     extends JpaRepository<RegistroPonto, Long> {
 
-  Optional<RegistroPonto> findByProfessorIdAndStatus(
-      Long professorId,
+  Optional<RegistroPonto> findByUsuarioIdAndStatus(
+      Long usuarioId,
       StatusPonto status);
 
   List<RegistroPonto> findAllByOrderByEntradaDesc();
 
-  List<RegistroPonto> findByProfessorIdOrderByEntradaDesc(Long professorId);
+  List<RegistroPonto> findByUsuarioIdOrderByEntradaDesc(Long usuarioId);
 
   List<RegistroPonto> findByEntradaBetweenOrderByEntradaDesc(LocalDateTime inicio, LocalDateTime fim);
 }

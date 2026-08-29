@@ -21,7 +21,7 @@ public class TurmaController {
   }
 
   @GetMapping("/todas")
-  @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+  @org.springframework.security.access.prepost.PreAuthorize("hasRole('GESTOR')")
   public List<Turma> listarTodas() {
     return service.listar();
   }
@@ -32,13 +32,13 @@ public class TurmaController {
   }
 
   @PostMapping
-  @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+  @org.springframework.security.access.prepost.PreAuthorize("hasRole('GESTOR')")
   public Turma salvar(@RequestBody Turma turma) {
     return service.salvar(turma);
   }
 
   @PutMapping("/{id}")
-  @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+  @org.springframework.security.access.prepost.PreAuthorize("hasRole('GESTOR')")
   public Turma atualizar(@PathVariable Long id,
       @RequestBody Turma turma) {
     turma.setId(id);
@@ -46,7 +46,7 @@ public class TurmaController {
   }
 
   @DeleteMapping("/{id}")
-  @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+  @org.springframework.security.access.prepost.PreAuthorize("hasRole('GESTOR')")
   public void excluir(@PathVariable Long id) {
     service.excluir(id);
   }

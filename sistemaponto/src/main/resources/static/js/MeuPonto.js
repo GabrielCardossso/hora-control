@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const [tRes, pRes] = await Promise.all([
         hcFetch("/api/turmas"),
-        hcFetch("/api/registros/professores/visiveis"),
+        hcFetch("/api/registros/usuarios/visiveis"),
       ]);
       const [turmas, professores] = await Promise.all([
         tRes.json(),
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fim.value) q.set("fim", fim.value);
     const professorId =
       professorIdForcado === undefined ? professor.value : professorIdForcado;
-    if (professorId) q.set("professorId", professorId);
+    if (professorId) q.set("usuarioId", professorId);
     if (turma.value) q.set("turmaId", turma.value);
     if (status.value) q.set("status", status.value);
     if (busca.value.trim()) q.set("busca", busca.value.trim());
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       '<tr><td colspan="8" class="hc-empty">Carregando registros...</td></tr>';
     try {
       const consultaLista = query();
-      const coordenador = usuarioAtual?.perfil?.startsWith("COORDENADOR_");
+      const coordenador = usuarioAtual?.tipoUsuario === "COORDENADOR";
       const consultaResumo = coordenador ? query(usuarioAtual.id) : consultaLista;
       const [resLista, resResumo] = await Promise.all([
         hcFetch(`/api/registros?${consultaLista}`),
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
             acoes.push(
               `<button class="hc-btn secondary" type="button" data-ajustar="${r.id}"><i class="fi fi-rr-edit" aria-hidden="true"></i>Ajustar</button>`,
             );
-          return `<tr><td data-label="Professor">${esc(r.professor.nome)}</td><td data-label="Turma/atividade"><strong>${esc(r.turma ? r.turma.codigo : "Extra")}</strong><br><span class="hc-muted">${esc(r.turma ? r.turma.nome : r.descricao || "Atividade extra")}</span></td><td data-label="Entrada">${dataHora.format(new Date(r.entrada))}</td><td data-label="Saída">${r.saida ? dataHora.format(new Date(r.saida)) : "—"}</td><td data-label="Horas">${hcFormatMinutes(hcMinutesFromRecord(r))}</td><td data-label="Status"><span class="hc-status ${r.status === "ABERTO" ? "open" : "closed"}">${r.status === "ABERTO" ? "Aberto" : "Fechado"}${r.ajustado ? " · ajustado" : ""}</span></td><td data-label="Observação">${esc(r.observacao || "Sem observação")}</td><td data-label="Ações"><div class="hc-row-actions">${acoes.join("")}</div></td></tr>`;
+          return `<tr><td data-label="Usuário">${esc(r.usuario.nome)}</td><td data-label="Turma/atividade"><strong>${esc(r.turma ? r.turma.codigo : "Extra")}</strong><br><span class="hc-muted">${esc(r.turma ? r.turma.nome : r.descricao || "Atividade extra")}</span></td><td data-label="Entrada">${dataHora.format(new Date(r.entrada))}</td><td data-label="Saída">${r.saida ? dataHora.format(new Date(r.saida)) : "—"}</td><td data-label="Horas">${hcFormatMinutes(hcMinutesFromRecord(r))}</td><td data-label="Status"><span class="hc-status ${r.status === "ABERTO" ? "open" : "closed"}">${r.status === "ABERTO" ? "Aberto" : "Fechado"}${r.ajustado ? " · ajustado" : ""}</span></td><td data-label="Observação">${esc(r.observacao || "Sem observação")}</td><td data-label="Ações"><div class="hc-row-actions">${acoes.join("")}</div></td></tr>`;
         },
       )
       .join("");
@@ -163,8 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function configurarUsuario(usuario) {
     usuarioAtual = usuario;
-    podeAjustar = usuario.perfil !== "PROFESSOR";
-    const coordenador = usuario.perfil?.startsWith("COORDENADOR_");
+    podeAjustar = usuario.tipoUsuario === "GESTOR";
+    const coordenador = usuario.tipoUsuario === "COORDENADOR";
     document.getElementById("rotuloTotalRegistros").textContent = coordenador
       ? "Seus registros"
       : "Registros";
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `${registro.turma.codigo} - ${registro.turma.nome}`
       : registro.descricao || "Atividade extra";
     document.getElementById("detalheProfessor").textContent =
-      registro.professor?.nome || "—";
+      registro.usuario?.nome || "—";
     document.getElementById("detalheAtividade").textContent = atividade;
     document.getElementById("detalheEntrada").textContent = dataHora.format(
       new Date(registro.entrada),

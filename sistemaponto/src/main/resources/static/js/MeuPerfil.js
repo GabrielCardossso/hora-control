@@ -23,10 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function atualizarTipo() {
     const extra = tipo.value === "ATIVIDADE_EXTRA";
     document.getElementById("campoDescricao").hidden = !extra;
-    turma.required = !extra;
+    turma.required = true;
     if (!pontoAberto) {
-      turma.disabled = !extra && quantidadeTurmas === 0;
-      btn.disabled = !extra && quantidadeTurmas === 0;
+      turma.disabled = quantidadeTurmas === 0;
+      btn.disabled = quantidadeTurmas === 0;
     }
   }
   tipo.addEventListener("change", atualizarTipo);
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const inicio = new Date();
       inicio.setDate(1);
       const filtroProprio = usuarioAtual?.id
-        ? `&professorId=${encodeURIComponent(usuarioAtual.id)}`
+        ? `&usuarioId=${encodeURIComponent(usuarioAtual.id)}`
         : "";
       const [turmasRes, abertoRes, registrosRes] = await Promise.all([
         hcFetch("/api/registros/turmas-permitidas"),
@@ -191,10 +191,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (painelInicializado) return;
     painelInicializado = true;
     usuarioAtual = usuario;
-    const admin = usuario.perfil === "ADMIN";
-    document.getElementById("painelAdmin").hidden = !admin;
-    document.getElementById("painelProfessor").hidden = admin;
-    if (admin) {
+    const gestor = usuario.tipoUsuario === "GESTOR";
+    document.getElementById("painelAdmin").hidden = !gestor;
+    document.getElementById("painelProfessor").hidden = gestor;
+    if (gestor) {
       document.getElementById("tituloPainel").textContent =
         "Painel administrativo";
       document.getElementById("descricaoPainel").textContent =

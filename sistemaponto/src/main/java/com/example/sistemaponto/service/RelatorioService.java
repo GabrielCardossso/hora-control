@@ -47,7 +47,7 @@ public class RelatorioService {
       for (String header : headers)
         table.addCell(celula(header, headerFont, new Color(75, 71, 153)));
       for (RegistroPonto registro : registros) {
-        table.addCell(celula(registro.getProfessor().getNome(), body, Color.WHITE));
+        table.addCell(celula(registro.getUsuario().getNome(), body, Color.WHITE));
         table.addCell(celula(registro.getTurma() == null ? texto(registro.getDescricao())
             : registro.getTurma().getNome(), body, Color.WHITE));
         table.addCell(celula(registro.getTurma() == null ? "-" : texto(registro.getTurma().getCodigo()), body,

@@ -24,7 +24,8 @@ public class RegistroPonto {
   private Long id;
 
   @ManyToOne
-  private Professor professor;
+  @jakarta.persistence.JoinColumn(name = "usuario_id", nullable = false)
+  private Usuario usuario;
 
   @ManyToOne
   private Turma turma;
@@ -50,7 +51,7 @@ public class RegistroPonto {
   private String justificativaAjuste;
 
   @ManyToOne
-  private Professor alteradoPor;
+  private Usuario alteradoPor;
 
   private LocalDateTime dataAlteracao;
 
@@ -62,12 +63,12 @@ public class RegistroPonto {
     this.id = id;
   }
 
-  public Professor getProfessor() {
-    return professor;
+  public Usuario getUsuario() {
+    return usuario;
   }
 
-  public void setProfessor(Professor professor) {
-    this.professor = professor;
+  public void setUsuario(Usuario usuario) {
+    this.usuario = usuario;
   }
 
   public Turma getTurma() {
@@ -146,11 +147,11 @@ public class RegistroPonto {
     this.justificativaAjuste = justificativaAjuste;
   }
 
-  public Professor getAlteradoPor() {
+  public Usuario getAlteradoPor() {
     return alteradoPor;
   }
 
-  public void setAlteradoPor(Professor alteradoPor) {
+  public void setAlteradoPor(Usuario alteradoPor) {
     this.alteradoPor = alteradoPor;
   }
 

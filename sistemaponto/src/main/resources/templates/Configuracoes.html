@@ -21,11 +21,11 @@
         <nav class="hc-nav">
           <a th:href="@{/perfil}"><i class="fi fi-rr-home" aria-hidden="true"></i><span>Painel</span></a
           ><a th:href="@{/ponto}"><i class="fi fi-rr-time-check" aria-hidden="true"></i><span>Meu ponto</span></a
-          ><a th:href="@{/relatorios}" data-role="ADMIN" hidden
+          ><a th:href="@{/relatorios}"
             ><i class="fi fi-rr-document" aria-hidden="true"></i><span>Relatórios</span></a
-          ><a th:href="@{/gestao-turmas}" data-role="ADMIN" hidden
+          ><a th:href="@{/gestao-turmas}" data-role="GESTOR" hidden
             ><i class="fi fi-rr-graduation-cap" aria-hidden="true"></i><span>Turmas</span></a
-          ><a th:href="@{/usuarios}" data-role="ADMIN" hidden
+          ><a th:href="@{/usuarios}" data-role="GESTOR" hidden
             ><i class="fi fi-rr-users" aria-hidden="true"></i><span>Usuários</span></a
           ><a th:href="@{/configuracoes}" aria-current="page"
             ><i class="fi fi-rr-settings" aria-hidden="true"></i><span>Configurações</span></a
@@ -111,7 +111,7 @@
               </div>
             </form>
           </article>
-          <article class="hc-card" data-role="ADMIN" hidden>
+          <article class="hc-card" data-role="GESTOR" hidden>
             <h2>Administração</h2>
             <p class="hc-muted">
               Cadastre contas, defina níveis de acesso e vincule professores às
