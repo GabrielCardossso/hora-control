@@ -1,0 +1,4 @@
+# Configuração local de IDE
+.vscode/
+.idea/
+*.iml
