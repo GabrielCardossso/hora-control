@@ -1,8 +1,6 @@
-# ⏱️ HoraControl
+<img src="./.github/readme/header.svg" width="100%" alt="hora-control: Projeto acadêmico · SENAC" />
 
-Sistema web de **controle de ponto educacional**: professores e coordenadores registram entrada e saída vinculadas às suas turmas, e o gestor educacional administra cadastros, ajustes e relatórios.
-
-> Projeto acadêmico desenvolvido no curso **Técnico em Desenvolvimento de Sistemas** do SENAC.
+<img src="./.github/readme/sobre.svg" width="100%" alt="Sobre o projeto: Sistema web de controle de ponto educacional: professores e coordenadores registram entrada e saída vinculadas às suas turmas, e o gestor educacional administra cadastros, ajustes e relatórios." />
 
 ![Java](https://img.shields.io/badge/Java_17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
